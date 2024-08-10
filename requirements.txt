@@ -6,3 +6,8 @@ PyPDF2
 Pillow
 pymupdf
 requests
+matplotlib
+seaborn
+wordcloud
+nltk
+scikit-learn
