@@ -14,6 +14,10 @@ from streamlit_extras.let_it_rain import rain
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.stoggle import stoggle
 from streamlit_extras.switch_page_button import switch_page
+from nltk.sentiment import SentimentIntensityAnalyzer
+from sklearn.feature_extraction.text import CountVectorizer
+import seaborn as sns
+import pandas as pd
 
 # Load environment variables
 load_dotenv()
@@ -24,9 +28,10 @@ email_password = os.getenv('EMAIL_PASSWORD')
 # Initialize the Google Generative AI model
 genai.configure(api_key=google_api_key)
 
+# Initialize sentiment analyzer
+sia = SentimentIntensityAnalyzer()
+
 # Function to get response from Gemini Pro
-
-
 def get_gemini_response(prompt):
     try:
         response = genai.generate_text(prompt=prompt)
@@ -36,8 +41,6 @@ def get_gemini_response(prompt):
         return None
 
 # Function to extract text from a PDF using PyMuPDF with keyword search
-
-
 def extract_text_from_pdf(pdf_path, keywords=None):
     text = ""
     with fitz.open(pdf_path) as pdf:
@@ -53,28 +56,20 @@ def extract_text_from_pdf(pdf_path, keywords=None):
     return text
 
 # Function to generate a word cloud from text
-
-
 def generate_wordcloud(text):
-    wordcloud = WordCloud(width=800, height=400,
-                          background_color='white').generate(text)
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
     return wordcloud
 
 # Function to search literature (example API endpoint)
-
-
 def search_literature(query):
     try:
-        response = requests.get(
-            f"https://api.literature-search.com?query={query}")
+        response = requests.get(f"https://api.literature-search.com?query={query}")
         return response.json()
     except Exception as e:
         st.error(f"Error searching literature: {e}")
         return None
 
 # Function to send email notifications
-
-
 def send_email(to_email, subject, message):
     try:
         msg = MIMEMultipart()
@@ -92,6 +87,41 @@ def send_email(to_email, subject, message):
     except Exception as e:
         st.error(f"Error sending email: {e}")
 
+# Function for sentiment analysis
+def analyze_sentiment(text):
+    return sia.polarity_scores(text)
+
+# Function for entity recognition (placeholder, you can use SpaCy or any other NLP library)
+def extract_entities(text):
+    entities = {
+        "Entities": ["Drug A", "Polymer B"],
+        "Type": ["Chemical", "Material"]
+    }
+    return pd.DataFrame(entities)
+
+# Function for advanced PDF processing (extract tables)
+def extract_tables_from_pdf(pdf_path):
+    tables = []
+    with fitz.open(pdf_path) as pdf:
+        for page in pdf:
+            tables.append(page.search_for_table())
+    return tables
+
+# Function to plot sentiment analysis
+def plot_sentiment_analysis(sentiment_scores):
+    labels = ['Positive', 'Negative', 'Neutral']
+    scores = [sentiment_scores['pos'], sentiment_scores['neg'], sentiment_scores['neu']]
+    plt.bar(labels, scores, color=['green', 'red', 'gray'])
+    st.pyplot(plt)
+
+# Function to plot word frequency
+def plot_word_frequency(text):
+    vectorizer = CountVectorizer(stop_words='english')
+    word_count = vectorizer.fit_transform([text])
+    word_freq = pd.DataFrame({'word': vectorizer.get_feature_names_out(), 'count': word_count.toarray().sum(axis=0)})
+    word_freq = word_freq.sort_values('count', ascending=False).head(20)
+    sns.barplot(x='count', y='word', data=word_freq)
+    st.pyplot(plt)
 
 # Define experiment templates
 templates = {
@@ -107,14 +137,17 @@ if 'user_inputs' not in st.session_state:
 if 'responses' not in st.session_state:
     st.session_state['responses'] = []
 
+if 'template_versions' not in st.session_state:
+    st.session_state['template_versions'] = {}
+
 # Custom CSS styling
 st.markdown("""
     <style>
     body {
-        background-color: #f5f5f5;
+        background-color: #f0f0f0;
     }
     .stSidebar {
-        background-color: #28334AFF;
+        background-color: #33475b;
         color: white;
     }
     .stButton button {
@@ -122,93 +155,95 @@ st.markdown("""
         color: white;
     }
     .stTextInput input {
-        background-color: #f0f0f0;
+        background-color: #e6e6e6;
     }
     .stFormSubmitButton button {
         background-color: #2E8B57;
         color: white;
     }
+    .stHeader {
+        background-color: #FF6F61;
+        color: white;
+    }
+    .stTitle {
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        font-size: 2.5rem;
+        color: #28334AFF;
+    }
+    .stSubheader {
+        font-family: 'Arial', sans-serif;
+        font-size: 1.5rem;
+        color: #28334AFF;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Streamlit UI
-st.title("✨ GenieSynth")
-st.subheader("Pioneering the Future of Chemical Science")
+# Streamlit UI with multi-page navigation
+st.set_page_config(page_title="GenieSynth", page_icon="✨", layout="wide")
 
-# Sidebar with custom layout
-st.sidebar.header("📁 Upload PDF")
-uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf")
-keywords = st.sidebar.text_input("Search Keywords (comma-separated):")
+def main_page():
+    st.title("✨ GenieSynth")
+    st.subheader("Pioneering the Future of Chemical Science")
+    rain(emoji="🧪", font_size=30, falling_speed=10, animation_length="infinite")
 
-if uploaded_file is not None:
-    try:
-        keyword_list = [k.strip()
-                        for k in keywords.split(',')] if keywords else None
-        pdf_text = extract_text_from_pdf(uploaded_file, keyword_list)
-        st.sidebar.text_area("PDF Content", pdf_text, height=300)
-        if pdf_text:
-            wordcloud = generate_wordcloud(pdf_text)
-            st.sidebar.image(wordcloud.to_array(), use_column_width=True)
-    except Exception as e:
-        st.sidebar.error(f"Error reading PDF: {e}")
+def pdf_processing_page():
+    st.title("📁 PDF Processing")
+    uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
+    keywords = st.text_input("Search Keywords (comma-separated):")
+    if uploaded_file is not None:
+        try:
+            keyword_list = [k.strip() for k in keywords.split(',')] if keywords else None
+            pdf_text = extract_text_from_pdf(uploaded_file, keyword_list)
+            st.text_area("PDF Content", pdf_text, height=300)
+            if pdf_text:
+                wordcloud = generate_wordcloud(pdf_text)
+                st.image(wordcloud.to_array(), use_column_width=True)
+                sentiment_scores = analyze_sentiment(pdf_text)
+                plot_sentiment_analysis(sentiment_scores)
+                plot_word_frequency(pdf_text)
+        except Exception as e:
+            st.error(f"Error processing PDF: {e}")
 
-add_vertical_space(2)
+def experiment_templates_page():
+    st.title("🔬 Experiment Templates")
+    template_selection = st.selectbox("Choose a template:", list(templates.keys()))
+    st.write(templates[template_selection])
+    if template_selection not in st.session_state['template_versions']:
+        st.session_state['template_versions'][template_selection] = [templates[template_selection]]
 
-st.sidebar.header("🔬 Experiment Templates")
-template_selection = st.sidebar.selectbox(
-    "Choose a template:", list(templates.keys()))
-st.sidebar.write(templates[template_selection])
+    # Save template version
+    new_template_version = st.text_area("Modify Template:", templates[template_selection])
+    if st.button("Save Version"):
+        st.session_state['template_versions'][template_selection].append(new_template_version)
+        st.success("Version saved successfully!")
 
-add_vertical_space(2)
+    # Display template versions
+    st.write("### Template Versions")
+    for i, version in enumerate(st.session_state['template_versions'][template_selection]):
+        st.write(f"Version {i+1}: {version}")
 
-st.sidebar.header("📝 Research Query")
-user_input = st.sidebar.text_input("Enter your research query:")
+def real_time_collaboration_page():
+    st.title("👥 Real-time Collaboration")
+    chat_input = st.text_input("Enter your message:")
+    if 'chat_history' not in st.session_state:
+        st.session_state['chat_history'] = []
+    if st.button("Send"):
+        st.session_state['chat_history'].append(chat_input)
+    st.write("### Chat History")
+    for msg in st.session_state['chat_history']:
+        st.write(f"- {msg}")
 
-# Main layout with columns
-col1, col2 = st.columns(2)
+# Multi-page navigation
+pages = {
+    "Main Page": main_page,
+    "PDF Processing": pdf_processing_page,
+    "Experiment Templates": experiment_templates_page,
+    "Real-time Collaboration": real_time_collaboration_page
+}
 
-with col1:
-    st.header("📊 Gemini Pro Analysis")
-    if st.button("Submit Query"):
-        if user_input:
-            response = get_gemini_response(user_input)
-            if response:
-                st.session_state['user_inputs'].append(user_input)
-                st.session_state['responses'].append(response)
-                st.write("### Gemini Pro Response")
-                st.write(response)
-        else:
-            st.error("Please enter a query to proceed.")
+st.sidebar.title("Navigation")
+page_selection = st.sidebar.radio("Go to", list(pages.keys()))
 
-with col2:
-    stoggle("🔍 Literature Search", "Search for related scientific literature.")
-    if st.button("Search Literature"):
-        if user_input:
-            literature_results = search_literature(user_input)
-            if literature_results:
-                st.write("### Literature Search Results")
-                st.write(literature_results)
-        else:
-            st.error("Please enter a query to proceed.")
-
-# User feedback form
-st.header("💬 Feedback")
-with st.form(key='feedback_form'):
-    feedback = st.text_area("Please provide your feedback:")
-    submit_button = st.form_submit_button("Submit Feedback")
-
-if submit_button:
-    st.success("Thank you for your feedback!")
-
-# Email results to user
-if st.session_state['responses']:
-    st.header("📧 Email Results")
-    email = st.text_input("Enter your email address:")
-    if st.button("Send Email"):
-        if email:
-            email_content = "\n\n".join([f"Query: {q}\nResponse: {r}" for q, r in zip(
-                st.session_state['user_inputs'], st.session_state['responses'])])
-            send_email(email, "GenieSynth Analysis Results", email_content)
-        else:
-            st.error("Please enter a valid email address.")
-
+# Render the selected page
+pages[page_selection]()
