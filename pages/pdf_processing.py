@@ -12,6 +12,8 @@ import fitz
 import pandas as pd
 from io import BytesIO
 import re
+import matplotlib.pyplot as plt
+
 
 def pdf_processing_page():
     st.title("📁 PDF Processing")
