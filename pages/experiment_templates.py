@@ -1,7 +1,9 @@
 import streamlit as st
 import google.generativeai as genai
 from dotenv import load_dotenv
-import pdfkit
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+import io
 import os
 
 load_dotenv()
@@ -82,8 +84,20 @@ def experiment_templates_page():
             st.download_button("Download Template (TXT)", template_str, f"{template_type}.txt")
 
         if st.button("Export as PDF"):
-            pdf_data = pdfkit.from_string('\n'.join(st.session_state['template_versions'][template_type]), False)
-            st.download_button("Download Template (PDF)", pdf_data, f"{template_type}.pdf", mime="application/pdf")
+            buffer = io.BytesIO()
+            c = canvas.Canvas(buffer, pagesize=letter)
+            text = '\n'.join(st.session_state['template_versions'][template_type])
+
+            text_object = c.beginText(50, 750) 
+            text_object.setFont("Helvetica", 12)
+            for line in text.split('\n'):
+                text_object.textLine(line)
+            
+            c.drawText(text_object)
+            c.save()
+
+            buffer.seek(0)
+            st.download_button("Download Template (PDF)", buffer, f"{template_type}.pdf", mime="application/pdf")
 
         uploaded_template = st.file_uploader("Import Template", type="txt")
         if uploaded_template is not None:

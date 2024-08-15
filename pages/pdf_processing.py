@@ -18,9 +18,12 @@ def pdf_processing_page():
 
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
     if uploaded_file is not None:
+        file_bytes = uploaded_file.getvalue()
+        pdf_stream = BytesIO(file_bytes)
+
         st.write("### PDF Metadata")
         try:
-            with fitz.open(stream=uploaded_file.read(), filetype="pdf") as pdf:
+            with fitz.open(stream=file_bytes, filetype="pdf") as pdf:
                 pdf_metadata = pdf.metadata
                 st.write(f"**Title:** {pdf_metadata.get('title', 'N/A')}")
                 st.write(f"**Author:** {pdf_metadata.get('author', 'N/A')}")
@@ -46,20 +49,22 @@ def pdf_processing_page():
                 st.text_area("PDF Content", pdf_text, height=300)
 
                 st.write("### Word Cloud")
-                wordcloud = generate_wordcloud(pdf_text)
-                st.image(wordcloud.to_array(), use_column_width=True)
-                st.write("**Customize Word Cloud**")
                 wordcloud_max_words = st.slider("Max Words", 10, 200, 100)
                 wordcloud_width = st.slider("Width", 400, 800, 600)
                 wordcloud_height = st.slider("Height", 400, 800, 400)
-                st.image(generate_wordcloud(pdf_text, max_words=wordcloud_max_words, width=wordcloud_width, height=wordcloud_height).to_array(), use_column_width=True)
+                wordcloud = generate_wordcloud(pdf_text, max_words=wordcloud_max_words, width=wordcloud_width, height=wordcloud_height)
+                st.image(wordcloud.to_array(), use_column_width=True)
 
                 st.write("### Sentiment Analysis")
                 sentiment_scores = analyze_sentiment(pdf_text)
-                plot_sentiment_analysis(sentiment_scores)
+                sentiment_plot = plot_sentiment_analysis(sentiment_scores)
+                if isinstance(sentiment_plot, plt.Figure):
+                    st.pyplot(sentiment_plot)
 
                 st.write("### Word Frequency")
-                plot_word_frequency(pdf_text)
+                word_freq_plot = plot_word_frequency(pdf_text)
+                if isinstance(word_freq_plot, plt.Figure):
+                    st.pyplot(word_freq_plot)
 
                 st.write("### Entity Recognition")
                 entities = extract_entities(pdf_text)
