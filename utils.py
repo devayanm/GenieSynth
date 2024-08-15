@@ -13,6 +13,10 @@ import seaborn as sns
 import pandas as pd
 import spacy
 import logging
+import pdfplumber
+import nltk
+nltk.download('vader_lexicon')
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -150,17 +154,18 @@ def extract_entities(text):
 
 def extract_tables_from_pdf(pdf_file):
     """
-    Extracts tables from a PDF file. (Dummy implementation)
+    Extracts tables from a PDF file.
     """
     try:
         tables = []
-        with fitz.open(stream=pdf_file.read(), filetype="pdf") as pdf:
-            for page in pdf:
-                tables.append(page.search_for_table())  # Dummy placeholder for actual table extraction
+        with pdfplumber.open(pdf_file) as pdf:
+            for page in pdf.pages:
+                tables.extend(page.extract_tables())
         return tables
     except Exception as e:
         logging.error(f"Error extracting tables from PDF: {e}")
         return f"Error extracting tables from PDF: {e}"
+
 
 def plot_sentiment_analysis(sentiment_scores):
     """
@@ -207,7 +212,7 @@ def plot_word_frequency(text):
             raise ValueError("No words to plot.")
         
         plt.figure(figsize=(10, 6))
-        sns.barplot(x='count', y='word', data=word_freq, palette='viridis')
+        sns.barplot(x='count', y='word', data=word_freq, palette='viridis', hue=None) 
         plt.title('Word Frequency')
         plt.xlabel('Count')
         plt.ylabel('Word')
