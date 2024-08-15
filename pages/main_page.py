@@ -1,6 +1,5 @@
 import streamlit as st
 
-
 def main_page():
     st.title("✨ GenieSynth")
     st.subheader("Pioneering the Future of Chemical Science")
@@ -40,16 +39,15 @@ def main_page():
     with col1:
         if st.button("🔬 Experiment Templates"):
             st.session_state.page = "Experiment Templates"
-            st.experimental_rerun()
+            st.write("Button '🔬 Experiment Templates' clicked")
     with col2:
         if st.button("📁 PDF Processing"):
             st.session_state.page = "PDF Processing"
-            st.experimental_rerun()
+            st.write("Button '📁 PDF Processing' clicked")
     with col3:
         if st.button("👥 Real-time Collaboration"):
             st.session_state.page = "Real-time Collaboration"
-            st.experimental_rerun()
-
+            st.write("Button '👥 Real-time Collaboration' clicked")
     st.write("---")
     st.write("""
     **Need help?** Visit our [documentation](https://your-docs-link.com) or contact our [support team](mailto:support@geniesynth.com).

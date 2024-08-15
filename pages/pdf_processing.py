@@ -1,6 +1,6 @@
 import streamlit as st
 from utils import extract_text_from_pdf, generate_wordcloud, analyze_sentiment, plot_sentiment_analysis, plot_word_frequency, extract_entities, extract_tables_from_pdf
-
+import fitz
 
 def pdf_processing_page():
     st.title("📁 PDF Processing")
@@ -8,27 +8,23 @@ def pdf_processing_page():
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
     if uploaded_file is not None:
         st.write("### PDF Metadata")
-        with fitz.open(uploaded_file) as pdf:
+        with fitz.open(stream=uploaded_file.read(), filetype="pdf") as pdf:
             pdf_metadata = pdf.metadata
             st.write(f"**Title:** {pdf_metadata.get('title', 'N/A')}")
             st.write(f"**Author:** {pdf_metadata.get('author', 'N/A')}")
-            st.write(
-                f"**Creation Date:** {pdf_metadata.get('creationDate', 'N/A')}")
+            st.write(f"**Creation Date:** {pdf_metadata.get('creationDate', 'N/A')}")
             st.write(f"**Number of Pages:** {pdf.page_count}")
 
-        page_range = st.text_input(
-            "Enter page range (e.g., 1-3) or leave empty for all pages:")
+        page_range = st.text_input("Enter page range (e.g., 1-3) or leave empty for all pages:")
         keywords = st.text_input("Search Keywords (comma-separated):")
 
         try:
-            keyword_list = [k.strip()
-                            for k in keywords.split(',')] if keywords else None
+            keyword_list = [k.strip() for k in keywords.split(',')] if keywords else None
             start_page, end_page = (None, None)
             if page_range:
                 start_page, end_page = map(int, page_range.split('-'))
 
-            pdf_text = extract_text_from_pdf(
-                uploaded_file, keywords=keyword_list, start_page=start_page, end_page=end_page)
+            pdf_text = extract_text_from_pdf(uploaded_file, keywords=keyword_list, start_page=start_page, end_page=end_page)
             st.text_area("PDF Content", pdf_text, height=300)
 
             if pdf_text:
@@ -55,7 +51,5 @@ def pdf_processing_page():
                         st.table(table)
                 else:
                     st.write("No tables found.")
-
         except Exception as e:
             st.error(f"Error processing PDF: {e}")
-

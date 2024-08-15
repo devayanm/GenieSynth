@@ -1,6 +1,5 @@
 import streamlit as st
 
-
 def real_time_collaboration_page():
     st.title("👥 Real-time Collaboration")
 
@@ -14,11 +13,13 @@ def real_time_collaboration_page():
     chat_input = st.text_area("Enter your message:")
 
     if st.button("Send"):
-        if chat_input:
-            mentions = [word[1:]
-                        for word in chat_input.split() if word.startswith('@')]
-            st.session_state['chat_history'].append(
-                {"user": user_name, "message": chat_input, "mentions": mentions})
+        if not user_name:
+            st.warning("Please enter your name before sending a message.")
+        elif not chat_input:
+            st.warning("Message cannot be empty.")
+        else:
+            mentions = [word[1:] for word in chat_input.split() if word.startswith('@')]
+            st.session_state['chat_history'].append({"user": user_name, "message": chat_input, "mentions": mentions})
             if mentions:
                 st.session_state['user_mentions'].extend(mentions)
             st.success("Message sent successfully!")
@@ -27,16 +28,14 @@ def real_time_collaboration_page():
     for entry in st.session_state['chat_history']:
         message_display = f"**{entry['user']}**: {entry['message']}"
         if entry['mentions']:
-            mention_list = ', '.join(
-                [f"@{mention}" for mention in entry['mentions']])
+            mention_list = ', '.join([f"@{mention}" for mention in entry['mentions']])
             message_display += f" [Mentions: {mention_list}]"
         st.write(message_display)
 
     st.write("### Filter by Mentions")
     mention_filter = st.text_input("Filter by user (e.g., @john):")
     if mention_filter:
-        filtered_messages = [entry for entry in st.session_state['chat_history']
-                             if mention_filter[1:] in entry['mentions']]
+        filtered_messages = [entry for entry in st.session_state['chat_history'] if mention_filter[1:] in entry['mentions']]
         if filtered_messages:
             st.write("### Filtered Messages")
             for entry in filtered_messages:
@@ -47,16 +46,13 @@ def real_time_collaboration_page():
     st.write("### Share Files")
     uploaded_file = st.file_uploader("Choose a file to share:")
     if uploaded_file is not None:
-        st.session_state['chat_history'].append(
-            {"user": user_name, "message": f"shared a file: {uploaded_file.name}", "mentions": []})
+        st.session_state['chat_history'].append({"user": user_name, "message": f"shared a file: {uploaded_file.name}", "mentions": []})
         st.success(f"File {uploaded_file.name} shared successfully!")
 
     st.write("### Export Chat History")
     if st.button("Export Chat"):
-        chat_history_str = '\n'.join(
-            [f"{entry['user']}: {entry['message']}" for entry in st.session_state['chat_history']])
-        st.download_button("Download Chat History",
-                           chat_history_str, "chat_history.txt")
+        chat_history_str = '\n'.join([f"{entry['user']}: {entry['message']}" for entry in st.session_state['chat_history']])
+        st.download_button("Download Chat History", chat_history_str, "chat_history.txt")
 
     st.markdown("""
         <style>

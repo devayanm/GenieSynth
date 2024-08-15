@@ -19,7 +19,11 @@ pages = {
 st.sidebar.title("Navigation")
 page_selection = st.sidebar.radio("Go to", list(pages.keys()))
 
+# Update session state based on sidebar selection
 if page_selection != st.session_state.page:
     st.session_state.page = page_selection
 
+st.write(f"Current page: {st.session_state.page}")  # Debugging line
+
+# Display the selected page
 pages[st.session_state.page]()
