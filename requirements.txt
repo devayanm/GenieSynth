@@ -12,4 +12,5 @@ wordcloud
 nltk
 scikit-learn
 python-docx
-
+pdfkit
+spacy

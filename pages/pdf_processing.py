@@ -9,7 +9,9 @@ from utils import (
     extract_tables_from_pdf
 )
 import fitz
+import pandas as pd
 from io import BytesIO
+import re
 
 def pdf_processing_page():
     st.title("📁 PDF Processing")
@@ -37,13 +39,20 @@ def pdf_processing_page():
             if page_range:
                 start_page, end_page = map(int, page_range.split('-'))
 
-            pdf_text = extract_text_from_pdf(uploaded_file, keywords=keyword_list, start_page=start_page, end_page=end_page)
-            st.text_area("PDF Content", pdf_text, height=300)
+            file_stream = BytesIO(uploaded_file.read())
 
+            pdf_text = extract_text_from_pdf(file_stream, keywords=keyword_list, start_page=start_page, end_page=end_page)
             if pdf_text:
+                st.text_area("PDF Content", pdf_text, height=300)
+
                 st.write("### Word Cloud")
                 wordcloud = generate_wordcloud(pdf_text)
                 st.image(wordcloud.to_array(), use_column_width=True)
+                st.write("**Customize Word Cloud**")
+                wordcloud_max_words = st.slider("Max Words", 10, 200, 100)
+                wordcloud_width = st.slider("Width", 400, 800, 600)
+                wordcloud_height = st.slider("Height", 400, 800, 400)
+                st.image(generate_wordcloud(pdf_text, max_words=wordcloud_max_words, width=wordcloud_width, height=wordcloud_height).to_array(), use_column_width=True)
 
                 st.write("### Sentiment Analysis")
                 sentiment_scores = analyze_sentiment(pdf_text)
@@ -57,11 +66,16 @@ def pdf_processing_page():
                 st.dataframe(entities)
 
                 st.write("### Extracted Tables")
-                tables = extract_tables_from_pdf(uploaded_file)
+                file_stream.seek(0)  
+                tables = extract_tables_from_pdf(file_stream)
                 if tables:
                     for i, table in enumerate(tables):
                         st.write(f"Table {i+1}")
-                        st.table(table)
+                        if isinstance(table, pd.DataFrame):  
+                            st.dataframe(table)
+                            st.download_button("Download Table as CSV", table.to_csv(), file_name=f"table_{i+1}.csv", mime="text/csv")
+                        else:
+                            st.write("Invalid table format.")
                 else:
                     st.write("No tables found.")
 
@@ -72,11 +86,27 @@ def pdf_processing_page():
                     buffer.seek(0)
                     st.download_button("Download Text File", buffer, file_name="processed_text.txt", mime="text/plain")
                     
+                st.write("### Search and Highlight Text")
                 search_term = st.text_input("Search within the extracted text:")
                 if search_term:
-                    highlighted_text = pdf_text.replace(search_term, f"**{search_term}**")
+                    highlighted_text = re.sub(re.escape(search_term), f"**{search_term}**", pdf_text, flags=re.IGNORECASE)
                     st.text_area("Highlighted Text", highlighted_text, height=300)
+
+            else:
+                st.write("No text extracted from the PDF.")
 
         except Exception as e:
             st.error(f"Error processing PDF: {e}")
 
+    st.write("### Interactive PDF Viewer")
+    if uploaded_file is not None:
+        st.write("#### View PDF")
+        st.download_button("Download PDF", uploaded_file, file_name="uploaded_file.pdf")
+
+    st.write("### PDF Annotation")
+    if uploaded_file is not None:
+        st.write("#### Annotate PDF")
+        st.text_area("Add your annotations here:", height=200)
+
+if __name__ == "__main__":
+    pdf_processing_page()

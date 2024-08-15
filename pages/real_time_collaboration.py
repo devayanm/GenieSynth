@@ -15,9 +15,18 @@ def real_time_collaboration_page():
     if 'users' not in st.session_state:
         st.session_state['users'] = []
 
+    if 'user_profiles' not in st.session_state:
+        st.session_state['user_profiles'] = {}
+
     user_name = st.text_input("Your Name:", "")
-    if user_name and user_name not in st.session_state['users']:
-        st.session_state['users'].append(user_name)
+    if user_name:
+        if user_name not in st.session_state['users']:
+            st.session_state['users'].append(user_name)
+            st.session_state['user_profiles'][user_name] = {"avatar": None}
+
+    avatar_file = st.file_uploader("Upload Profile Picture (optional):", type=["jpg", "png"], key="avatar_uploader")
+    if avatar_file and user_name:
+        st.session_state['user_profiles'][user_name]["avatar"] = avatar_file
 
     chat_input = st.text_area("Enter your message:")
 
@@ -36,6 +45,10 @@ def real_time_collaboration_page():
 
     st.write("### Chat History")
     for entry in st.session_state['chat_history']:
+        user_profile = st.session_state['user_profiles'].get(entry['user'], {})
+        avatar = user_profile.get("avatar")
+        if avatar:
+            st.image(avatar, width=50)
         message_display = f"**{entry['timestamp']} - {entry['user']}**: {entry['message']}"
         if entry['mentions']:
             mention_list = ', '.join([f"@{mention}" for mention in entry['mentions']])
@@ -54,7 +67,7 @@ def real_time_collaboration_page():
             st.write("No messages found for this mention.")
 
     st.write("### Share Files")
-    uploaded_file = st.file_uploader("Choose a file to share:", type=["pdf", "txt", "docx", "jpg", "png"])
+    uploaded_file = st.file_uploader("Choose a file to share:", type=["pdf", "txt", "docx", "jpg", "png", "xlsx"])
     if uploaded_file is not None:
         st.session_state['chat_history'].append({"user": user_name, "message": f"shared a file: {uploaded_file.name}", "mentions": [], "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
         st.success(f"File {uploaded_file.name} shared successfully!")
@@ -74,6 +87,11 @@ def real_time_collaboration_page():
             doc = Document(uploaded_file)
             doc_text = '\n'.join([p.text for p in doc.paragraphs])
             st.text_area("DOCX Content", doc_text, height=300)
+        elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+            st.write("Excel file content:")
+            import pandas as pd
+            df = pd.read_excel(uploaded_file)
+            st.dataframe(df)
         else:
             st.write("File type not supported for preview.")
 
@@ -104,3 +122,5 @@ def real_time_collaboration_page():
         </style>
     """, unsafe_allow_html=True)
 
+if __name__ == "__main__":
+    real_time_collaboration_page()

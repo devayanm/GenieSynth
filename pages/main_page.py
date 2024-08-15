@@ -30,32 +30,39 @@ def main_page():
     Ready to transform your research process? Explore GenieSynth’s capabilities by selecting an option from the sidebar!
     """)
 
-    # Display an engaging image
-    st.image("https://your-image-link.com/image.jpg",
-             caption="GenieSynth in Action", use_column_width=True)
-
-    # Enhanced navigation with buttons
+    st.write("### 📷 Explore GenieSynth")
+    st.image("https://your-image-link.com/image1.jpg", caption="GenieSynth Overview", use_column_width=True)
+    st.image("https://your-image-link.com/image2.jpg", caption="Advanced Features", use_column_width=True)
+    
     st.write("### ⚡ Quick Access")
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("🔬 Experiment Templates"):
             st.session_state.page = "Experiment Templates"
-            st.experimental_rerun()
     with col2:
         if st.button("📁 PDF Processing"):
             st.session_state.page = "PDF Processing"
-            st.experimental_rerun()
     with col3:
         if st.button("👥 Real-time Collaboration"):
             st.session_state.page = "Real-time Collaboration"
-            st.experimental_rerun()
 
     st.write("---")
+    
+    st.write("### 🌟 Join Us Now")
+    st.button("Sign Up for a Demo", key="signup_button", on_click=lambda: st.markdown("[Sign Up for a Demo](https://your-signup-link.com)"))
+
     st.write("""
     **Need help?** Visit our [documentation](https://your-docs-link.com) or contact our [support team](mailto:support@geniesynth.com).
     """)
 
-    # Optional: Add some custom CSS for a polished look
+    st.write("---")
+    st.write("""
+    ### 📢 Follow Us
+    - [Twitter](https://twitter.com/geniesynth)
+    - [LinkedIn](https://linkedin.com/company/geniesynth)
+    - [Blog](https://your-blog-link.com)
+    """)
+
     st.markdown("""
         <style>
         .css-1v3fvcr {
@@ -66,12 +73,17 @@ def main_page():
         .stButton button {
             background-color: #0066cc;
             color: white;
+            border-radius: 5px;
         }
         .stImage img {
             border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .stMarkdown {
             font-size: 1.1em;
+        }
+        .stButton {
+            margin-top: 10px;
         }
         </style>
     """, unsafe_allow_html=True)
