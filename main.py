@@ -1,10 +1,16 @@
 import streamlit as st
-from pages.main_page import main_page
-from pages.experiment_templates import experiment_templates_page
-from pages.pdf_processing import pdf_processing_page
-from pages.real_time_collaboration import real_time_collaboration_page
+from page.main_page import main_page
+from page.experiment_templates import experiment_templates_page
+from page.pdf_processing import pdf_processing_page
+from page.real_time_collaboration import real_time_collaboration_page
 
-st.set_page_config(page_title="GenieSynth", page_icon="✨", layout="wide")
+st.set_page_config(
+    page_title="GenieSynth",
+    page_icon="✨",
+    layout="wide",
+    initial_sidebar_state="collapsed", 
+    menu_items={"Get help": None, "Report a bug": None, "About": None}
+)
 
 if 'page' not in st.session_state:
     st.session_state.page = "Main Page"
@@ -22,20 +28,12 @@ page_selection = st.sidebar.radio("Go to", list(pages.keys()))
 if page_selection != st.session_state.page:
     st.session_state.page = page_selection
 
-st.write(f"### {st.session_state.page}")
-
 pages[st.session_state.page]()
 
 st.markdown("""
     <style>
     .css-1v3fvcr { 
-        display: none; 
-    }
-    .css-1v3fvcr {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 20px;
-        margin: 20px 0;
+        display: none !important;
     }
     .stButton button {
         background-color: #0066cc;
