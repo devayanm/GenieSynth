@@ -34,20 +34,6 @@ def main_page():
     st.image("https://your-image-link.com/image1.jpg", caption="GenieSynth Overview", use_column_width=True)
     st.image("https://your-image-link.com/image2.jpg", caption="Advanced Features", use_column_width=True)
     
-    st.write("### ⚡ Quick Access")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("🔬 Experiment Templates"):
-            st.session_state.page = "Experiment Templates"
-    with col2:
-        if st.button("📁 PDF Processing"):
-            st.session_state.page = "PDF Processing"
-    with col3:
-        if st.button("👥 Real-time Collaboration"):
-            st.session_state.page = "Real-time Collaboration"
-
-    st.write("---")
-    
     st.write("### 🌟 Join Us Now")
     st.button("Sign Up for a Demo", key="signup_button", on_click=lambda: st.markdown("[Sign Up for a Demo](https://your-signup-link.com)"))
 
@@ -68,22 +54,23 @@ def main_page():
         .css-1v3fvcr {
             padding: 20px;
             border-radius: 8px;
-            background-color: #f5f5f5;
-        }
-        .stButton button {
-            background-color: #0066cc;
-            color: white;
-            border-radius: 5px;
+            background-color: var(--secondary-background-color);
+            color: var(--primary-text-color);
         }
         .stImage img {
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         .stMarkdown {
             font-size: 1.1em;
         }
         .stButton {
             margin-top: 10px;
+            background-color: var(--primary-button-background);
+            color: var(--primary-button-text);
+        }
+        .stButton:hover {
+            background-color: var(--primary-button-hover-background);
         }
         </style>
     """, unsafe_allow_html=True)

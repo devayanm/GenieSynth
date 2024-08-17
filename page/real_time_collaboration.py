@@ -103,24 +103,5 @@ def real_time_collaboration_page():
         buffer.seek(0)
         st.download_button("Download Chat History", buffer, file_name="chat_history.txt", mime="text/plain")
 
-    st.markdown("""
-        <style>
-        .stTextInput input, .stTextArea textarea {
-            background-color: #e6f7ff;
-        }
-        .stButton button {
-            background-color: #0066cc;
-            color: white;
-        }
-        .stDownloadButton button {
-            background-color: #28a745;
-            color: white;
-        }
-        .stFileUploader input[type="file"] {
-            background-color: #e6f7ff;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
 if __name__ == "__main__":
     real_time_collaboration_page()
